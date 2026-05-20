@@ -79,8 +79,42 @@ When a correction is applied repeatedly, it's promoted from memory to a persiste
 
 ## Implementation Notes
 
-Current MNEMOSYNE implementation:
-- **Storage backend**: Hermes persistent memory system
-- **Retrieval**: Automatic injection at session start + `session_search` for on-demand recall
-- **Budget**: ~2,200 chars personal memory + ~1,375 chars user profile
-- **Curation**: Manual pruning of stale entries; skills absorb procedural knowledge
+Current MNEMOSYNE implementation (v2 — May 2026):
+
+### Storage Backend: Agent Memory Server
+- **Server**: Python `http.server` running on LOQ (Windows), port 9736
+- **Database**: SQLite (`agent_memory.db`), unlimited capacity
+- **Location**: `C:\Users\alexa\Desktop\agent-memory\`
+- **Availability**: LAN only (10.40.202.77:9736), survives reboots
+
+### Multi-Layer Memory Architecture
+
+```
+Layer 1: Agent Memory Server (LOQ:9736) ← THIS DOCUMENT
+  ├── SQLite, unlimited storage
+  ├── Shared by ALL agents (Hermes, OOBE Scout, Android, etc.)
+  ├── REST API: GET/POST/DELETE /memory/{agent_id}/{key}
+  └── Survives reboots, cross-platform
+
+Layer 2: Hermes Built-in Memory
+  ├── ~2,200 chars personal memory
+  ├── Injected every session
+  └── Fast, always available
+
+Layer 3: Session Search
+  ├── Full transcript search across past sessions
+  └── On-demand recall
+```
+
+### Hermes Skill
+- **Skill**: `mnemosyne` (at `/skills/atlas/mnemosyne/`)
+- **CLI Tool**: `~/.hermes/scripts/mnemosyne.py`
+- **Dashboard**: HTML at `skills/atlas/mnemosyne/templates/dashboard.html`
+- **Cron Health Check**: Job `98bd8bde80a1` runs hourly, monitors all agent states
+- **Client Library**: `agent_memory_client.py` (Python, zero-dependency)
+
+### Key Metrics
+- **Agents tracked**: 8 (atlasnexusscout, hermes, athena, aegis, delphi, hephaestus, android-agent, mnemosyne-dashboard)
+- **Standard keys**: status, cycle_count, total_cost_usdc, query_cooldowns, last_run, agent_id
+- **Refresh**: Dashboard auto-refreshes every 30s
+- **Staleness threshold**: >2h = warning, >6h = critical

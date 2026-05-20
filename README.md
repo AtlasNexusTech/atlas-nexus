@@ -88,4 +88,4 @@ Each module is documented in detail under [`modules/`](modules/).
 
 MIT © Atlas Nexus Operations
 
-Built by [Alexandre Lasly](https://github.com/AtlasNexusOps).
+Built by [Alexandre Lasly](https://github.com/AtlasNexusTech).
